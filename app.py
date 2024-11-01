@@ -29,16 +29,16 @@ import streamlit as st
 # region <--------- Streamlit App Configuration --------->
 st.set_page_config(
     layout="centered",
-    page_title="PUB IDTD Cyber Threat Intelligence App"
+    page_title="AI Cyber Threat Intelligence App"
 )
 # endregion <--------- Streamlit App Configuration --------->
 
 # App Title
-st.title("PUB IDTD Cyber Threat Intelligence App")
+st.title("AI Cyber Threat Intelligence App")
 
 # App Description
 st.markdown("""
-Welcome to the PUB IDTD Cyber Threat Intelligence App! 
+Welcome to the AI Cyber Threat Intelligence App! 
 
 This tool is designed to streamline cyber threat analysis by taking in a news source, extracting relevant information, and translating it into actionable insights aligned with the MITRE ATT&CK framework. Here’s what it does:
 
