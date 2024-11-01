@@ -15,6 +15,8 @@ import json
 from bs4 import BeautifulSoup
 from newspaper import Article
 from langchain.document_loaders import PyPDFLoader
+import random  
+import hmac 
 
 
 # In[146]:
@@ -22,6 +24,26 @@ from langchain.document_loaders import PyPDFLoader
 
 from openai import OpenAI
 from getpass import getpass
+
+def check_password():  
+    """Returns `True` if the user had the correct password."""  
+    def password_entered():  
+        """Checks whether a password entered by the user is correct."""  
+        if hmac.compare_digest(st.session_state["password"], st.secrets["password"]):  
+            st.session_state["password_correct"] = True  
+            del st.session_state["password"]  # Don't store the password.  
+        else:  
+            st.session_state["password_correct"] = False  
+    # Return True if the passward is validated.  
+    if st.session_state.get("password_correct", False):  
+        return True  
+    # Show input for password.  
+    st.text_input(  
+        "Password", type="password", on_change=password_entered, key="password"  
+    )  
+    if "password_correct" in st.session_state:  
+        st.error("😕 Password incorrect")  
+    return False
 
 # Set up and run this Streamlit App
 import streamlit as st
@@ -32,6 +54,10 @@ st.set_page_config(
     page_title="AI Cyber Threat Intelligence App"
 )
 # endregion <--------- Streamlit App Configuration --------->
+
+# Do not continue if check_password is not True.  
+if not check_password():  
+    st.stop()
 
 # App Title
 st.title("AI Cyber Threat Intelligence App")
@@ -198,6 +224,10 @@ def user_choice():
 
 # Call the function to prompt user interaction
 scraped_text = user_choice()
+
+# Check if scraped_text is populated
+if not scraped_text:
+    st.stop()  # Stop execution until valid input is provided
 
 from datetime import datetime
 import pytz
@@ -567,7 +597,7 @@ The table below provides a summary of the MITRE ATT&CK techniques and tactics id
 """)
 
 # Display the final sorted DataFrame
-df_mitre
+st.dataframe(df_mitre)
 
 
 # #### Create technique_id to mitigation
@@ -617,79 +647,7 @@ This table presents recommended mitigation measures sourced from the MITRE ATT&C
 """)
 
 # Output the new DataFrame
-df_mitigation_table
-
-
-# <h1>5. For converting git clone Splunk .yml files into a dataframe</h1>
-
-# ### Only run it if the section 1.2 code was ran, which git clones the .yml files
-
-# In[163]:
-
-
-# # Initialize the directory to where .yml files are located
-# directory = r'C:\Users\Forensic\Desktop\AI LLM\security_content\detections\endpoint'
-
-# # Initialize an empty list to store the extracted data
-# data = []
-
-# # Iterate through each .yml file in the directory
-# for filename in os.listdir(directory):
-#     if filename.endswith(".yml"):  # Only process .yml files
-#         file_path = os.path.join(directory, filename)
-
-#         # Open and load the .yml file
-#         with open(file_path, 'r') as file:
-#             try:
-#                 # Load the content of the .yml file
-#                 content = yaml.safe_load(file)
-                
-#                 # Extract the required fields
-#                 name = content.get('name', 'N/A')  # Default to 'N/A' if key not found
-#                 description = content.get('description', 'N/A')
-#                 data_source = content.get('data_source', [])
-                
-#                 # Extract the 'tags' fields (confidence, impact, risk_score)
-#                 tags = content.get('tags', {})
-#                 mitre_attack_id = tags.get('mitre_attack_id', [])
-                
-#                 # Ensure the confidence, impact, and risk_score are treated as integers, defaulting to 0 if not present
-#                 confidence = tags.get('confidence', 0)  # Default to 0 if missing
-#                 impact = tags.get('impact', 0)  # Default to 0 if missing
-#                 risk_score = tags.get('risk_score', 0)  # Default to 0 if missing
-                
-#                 # Extract the 'search' field as a string (which contains the Splunk query)
-#                 search = content.get('search', 'N/A')
-                
-#                 # Append the extracted data to the list
-#                 data.append({
-#                     'name': name,
-#                     'description': description,
-#                     'data_source': ', '.join(data_source),  # Join list into a string
-#                     'mitre_attack_id': ', '.join(mitre_attack_id),  # Join list into a string
-#                     'search': search,
-#                     'confidence': confidence,
-#                     'impact': impact,
-#                     'risk_score': risk_score
-#                 })
-#             except yaml.YAMLError as e:
-#                 print(f"Error reading {filename}: {e}")
-
-# # Convert the data list into a DataFrame
-# df = pd.DataFrame(data)
-
-# # Save the DataFrame to a CSV file
-# df.to_csv('splunk_query_data.csv', index=False)
-
-# # Display a message confirming the save
-# print("Data has been saved to 'splunk_query_data.csv'")
-
-
-# <h1>6. Prompt Chaining 2 - Splunk Query to KQL Query</h1>
-
-# #### 1. Read Splunk query csv into a dataframe and create new DataFrame based on criteria of (i) 4688 data_source, (ii) confidence >50
-
-# In[173]:
+st.dataframe(df_mitigation_table)
 
 
 df_splunk = pd.read_csv("splunk_query_data.csv")
@@ -740,9 +698,6 @@ for index, row in enumerate(final_filtered_df.itertuples(), start=1):
 
 # Join the list into a single string with '\n\n' in between each query
 splunk_queries = '\n\n'.join(splunk_query_list)
-
-# splunk_queries contains the numbered search queries with MITRE IDs and newlines between them
-print(splunk_queries)
 
 
 # In[176]:
